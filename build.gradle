@@ -1,12 +1,30 @@
-plugins { id 'com.android.application' }
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.0.2'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: 'com.android.application'
+
 android {
-    namespace 'com.kingdani.app'
     compileSdk 33
+    namespace 'com.kingdani.app'
     defaultConfig {
-        applicationId "com.kingdani.app"
+        applicationId 'com.kingdani.app'
         minSdk 21
         targetSdk 33
         versionCode 1
-        versionName "1.0"
+        versionName '1.0'
     }
 }
