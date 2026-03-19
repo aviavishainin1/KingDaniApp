@@ -14,21 +14,17 @@ jobs:
 
       - name: Setup Android Project
         run: |
-          # יצירת מבנה התיקיות
           mkdir -p app/src/main/assets
           cp index.html app/src/main/assets/
           mkdir -p app/src/main/res/values
-          
-          # יצירת קובץ השם שיופיע במכשיר
           echo '<?xml version="1.0" encoding="utf-8"?><resources><string name="app_name">KingDani</string></resources>' > app/src/main/res/values/strings.xml
-          
-          # יצירת המניפסט
           mkdir -p app/src/main
           echo '<?xml version="1.0" encoding="utf-8"?><manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.kingdani.app"><application android:label="KingDani"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
           
-          # יצירת קובץ בנייה מודרני ותקין
-          echo "plugins { id 'com.android.application' version '8.1.0' apply false }" > build.gradle
-          echo "plugins { id 'com.android.application' }
+          # קובץ הגדרות פשוט שמתאים לכל גרסה
+          echo "buildscript { repositories { google(); mavenCentral() }; dependencies { classpath 'com.android.tools.build:gradle:8.1.0' } }
+          allprojects { repositories { google(); mavenCentral() } }
+          apply plugin: 'com.android.application'
           android {
               compileSdk 34
               namespace 'com.kingdani.app'
@@ -43,9 +39,9 @@ jobs:
           
           echo "include ':app'" > settings.gradle
 
-      - name: Build with Gradle
+      - name: Build APK
         run: |
-          # פקודה אחת שיוצרת את המנוע ובונה את ה-APK
+          # שימוש בגרסה ספציפית של גרדל שקיימת בשרת
           gradle assembleDebug
 
       - name: Upload APK
