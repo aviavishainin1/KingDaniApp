@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>בקר המלך - גרודנא</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientAnim 10s ease infinite;
+            color: white;
+            overflow: hidden;
+        }
+
+        @keyframes gradientAnim {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .header { text-align: center; margin-top: 20px; }
+        
+        /* כפתור מרכזי */
+        .main-btn {
+            width: 150px; height: 150px; border-radius: 50%; border: 8px solid white;
+            background: white; cursor: pointer; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; margin-top: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); transition: 0.3s;
+        }
+        .main-btn img { width: 60px; }
+        .main-btn span { color: #e73c7e; font-weight: bold; margin-top: 5px; }
+
+        /* היומן בתחתית - עיצוב חדש */
+        .logs-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            border-top-left-radius: 30px;
+            border-top-right-radius: 30px;
+            height: 50vh; /* חצי מסך */
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .logs-title { font-weight: bold; font-size: 1.2rem; margin-bottom: 10px; text-align: center; }
+
+        .logs-list { overflow-y: auto; flex-grow: 1; }
+
+        .call-card {
+            background: rgba(0, 0, 0, 0.2);
+            margin-bottom: 10px;
+            padding: 12px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .phone-num { font-size: 1.2rem; font-weight: bold; color: #ffeb3b; }
+        .call-time { font-size: 0.8rem; opacity: 0.8; }
+        .status-tag { padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; }
+        .status-red { background: #ff4d4d; color: white; }
+        .status-green { background: #00ff88; color: black; }
+
+        #emojiRain { position: fixed; top: 0; left: 0; pointer-events: none; width: 100%; height: 100%; z-index: 100; }
+    </style>
+</head>
+<body>
+
+    <div id="emojiRain"></div>
+
+    <div class="header">
+        <h1>דני המלך</h1>
+        <p>חמ"ל גרודנא המלכותי 👑</p>
+    </div>
+
+    <button id="mainBtn" class="main-btn" onclick="toggleStatus()">
+        <img id="lockImg" src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png">
+        <span id="btnText">פתח שיחות</span>
+    </button>
+
+    <div class="logs-container">
+        <div class="logs-title">📞 יומן שיחות (לחיצה לחיוג)</div>
+        <div class="logs-list" id="logsList">
+            <p style="text-align: center;">טוען שיחות...</p>
+        </div>
+    </div>
+
+    <script>
+        let isOpen = localStorage.getItem('deviceStatus') === 'true';
+        const logUrl = "https://www.call2all.co.il/ym/api/RenderYMGRFile?token=WU1BUElL.apik_MIE8HFeeGbF5UTbFOPWl9g.lUBIHUk6DofMgSDKhYQgCkg7Bgc3pSw4rrXl4vI-_kc&wath=ivr2:/LogQueueAll.2026-03-19.ymgr&convertType=json&notLoadLang=0";
+
+        function dial(target) {
+            // חיוג למערכת -> פסיק להשהיה -> מספר יעד -> סולמית
+            window.location.href = `tel:0772273407,${target}#`;
+        }
+
+        async function fetchLogs() {
+            try {
+                const res = await fetch(logUrl + "&t=" + Date.now());
+                const json = await res.json();
+                const list = document.getElementById('logsList');
+                if (json.responseStatus === "OK") {
+                    list.innerHTML = '';
+                    json.data.reverse().slice(0, 20).forEach(call => {
+                        const isOk = call["מצב התור"] === "נענה";
+                        const item = document.createElement('div');
+                        item.className = 'call-card';
+                        item.onclick = () => dial(call['טלפון']);
+                        item.innerHTML = `
+                            <div>
+                                <div class="phone-num">${call['טלפון']} 📞</div>
+                                <div class="call-time">${call['שעה']} | ${call['תאריך']}</div>
+                            </div>
+                            <div class="status-tag ${isOk ? 'status-green' : 'status-red'}">
+                                ${isOk ? 'נענה ✅' : 'ביטול ❌'}
+                            </div>
+                        `;
+                        list.appendChild(item);
+                    });
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function toggleStatus() {
+            isOpen = !isOpen;
+            localStorage.setItem('deviceStatus', isOpen);
+            updateUI();
+            if(isOpen) confetti(); else rain();
+        }
+
+        function updateUI() {
+            const txt = document.getElementById('btnText');
+            const img = document.getElementById('lockImg');
+            if(isOpen) {
+                txt.innerText = "סגור שיחות";
+                img.src = "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
+            } else {
+                txt.innerText = "פתח שיחות";
+                img.src = "https://cdn-icons-png.flaticon.com/512/3064/3064155.png";
+            }
+        }
+
+        function rain() {
+            for(let i=0; i<20; i++) {
+                setTimeout(() => {
+                    const e = document.createElement('div');
+                    e.innerText = '😭'; e.style.position = 'absolute';
+                    e.style.left = Math.random()*100+'vw'; e.style.top = '-50px';
+                    e.style.fontSize = '2rem'; e.style.transition = '3s linear';
+                    document.getElementById('emojiRain').appendChild(e);
+                    setTimeout(() => { e.style.transform = 'translateY(110vh)'; }, 10);
+                    setTimeout(() => e.remove(), 3000);
+                }, i*100);
+            }
+        }
+
+        updateUI();
+        fetchLogs();
+        setInterval(fetchLogs, 30000);
+    </script>
+</body>
+</html>
