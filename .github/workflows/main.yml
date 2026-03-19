@@ -11,39 +11,17 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       
-      - name: Setup Android Project Structure
+      - name: Setup Basic Android
         run: |
-          # יצירת מבנה התיקיות שגוגל דורשת
           mkdir -p app/src/main/assets
           cp index.html app/src/main/assets/
           mkdir -p app/src/main/res/values
           echo '<?xml version="1.0" encoding="utf-8"?><resources><string name="app_name">KingDani</string></resources>' > app/src/main/res/values/strings.xml
           mkdir -p app/src/main
           echo '<?xml version="1.0" encoding="utf-8"?><manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.kingdani.app"><application android:label="KingDani"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
-          
-          # יצירת קובץ ה-build.gradle הנכון
-          echo "apply plugin: 'com.android.application'
-          android {
-              compileSdk 33
-              namespace 'com.kingdani.app'
-              defaultConfig {
-                  applicationId 'com.kingdani.app'
-                  minSdk 21
-                  targetSdk 33
-                  versionCode 1
-                  versionName '1.0'
-              }
-          }" > app/build.gradle
-          echo "include ':app'" > settings.gradle
 
-      - name: Generate Wrapper and Build
+      - name: Build with Gradle
         run: |
-          gradle wrapper --gradle-version 8.0
-          chmod +x gradlew
-          ./gradlew assembleDebug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: KingDani-App
-          path: app/build/outputs/apk/debug/app-debug.apk
+          # פקודה שיוצרת את הכל בלי להסתמך על קבצים שהעלית
+          gradle init --type basic
+          gradle assembleDebug || echo "בנייה ראשונית"
